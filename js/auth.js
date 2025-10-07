@@ -2,7 +2,7 @@
 class AuthManager {
     constructor() {
         this.currentUser = null;
-        this.apiBaseUrl = 'https://smartreport-pro-backend.vercel.app/api';
+        this.apiBaseUrl = 'https://smartreport-pro-backendone.vercel.app/api';
         this.init();
     }
 
@@ -35,6 +35,21 @@ class AuthManager {
             signupForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.handleSignup();
+            });
+        }
+
+        // Google login buttons
+        const googleLoginBtn = document.getElementById('google-login-btn');
+        if (googleLoginBtn) {
+            googleLoginBtn.addEventListener('click', () => {
+                this.handleGoogleLogin();
+            });
+        }
+
+        const googleSignupBtn = document.getElementById('google-signup-btn');
+        if (googleSignupBtn) {
+            googleSignupBtn.addEventListener('click', () => {
+                this.handleGoogleLogin();
             });
         }
     }
@@ -84,6 +99,46 @@ class AuthManager {
         } catch (error) {
             this.hideLoading();
             this.showError('Login failed: ' + error.message);
+        }
+    }
+
+    async handleGoogleLogin() {
+        this.showLoading('Signing in with Google...');
+
+        try {
+            // Use Firebase Google authentication
+            const result = await window.signInWithGoogle();
+            const { user, idToken } = result;
+
+            // Send to backend for verification and user creation
+            const response = await fetch(`${this.apiBaseUrl}/auth/firebase`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ idToken })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Google login failed');
+            }
+
+            this.currentUser = data.user;
+            localStorage.setItem('smartreport_user', JSON.stringify(data.user));
+            localStorage.setItem('smartreport_token', data.token);
+            
+            this.hideLoading();
+            this.showSuccess('Google login successful! Redirecting...');
+            
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1500);
+
+        } catch (error) {
+            this.hideLoading();
+            this.showError('Google login failed: ' + error.message);
         }
     }
 
