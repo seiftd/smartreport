@@ -1,0 +1,21 @@
+{
+  "name": "smartreport-pro-deployment",
+  "version": "1.0.0",
+  "description": "SmartReport Pro SaaS Deployment Package",
+  "scripts": {
+    "deploy": "npm run build && npm run upload",
+    "build": "echo 'Building for production...'",
+    "upload": "echo 'Uploading to Hostinger...'",
+    "start": "pm2 start ecosystem.config.js",
+    "stop": "pm2 stop smartreport-api",
+    "restart": "pm2 restart smartreport-api",
+    "logs": "pm2 logs smartreport-api",
+    "status": "pm2 status"
+  },
+  "dependencies": {
+    "pm2": "^5.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

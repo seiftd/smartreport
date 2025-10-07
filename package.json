@@ -1,0 +1,40 @@
+{
+  "name": "smartreport-pro",
+  "version": "1.0.0",
+  "description": "Transform Your Data into Professional Reports in Minutes",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx live-server --port=3000 --open=/index.html",
+    "dev": "npx live-server --port=3000 --open=/index.html --watch=styles,js,*.html",
+    "build": "echo 'No build process needed for vanilla JS project'",
+    "test": "echo 'No tests configured yet'"
+  },
+  "keywords": [
+    "reports",
+    "data-visualization",
+    "business-intelligence",
+    "saas",
+    "no-code",
+    "charts",
+    "analytics"
+  ],
+  "author": "SmartReport Pro Team",
+  "license": "PROPRIETARY",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.0",
+    "filepond": "^4.30.4",
+    "jspdf": "^2.5.1",
+    "xlsx": "^0.18.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "private"
+  },
+  "homepage": "https://smartreportpro.com",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
