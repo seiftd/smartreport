@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "smartreport-pro-backend",
   "builds": [
     {
       "src": "server.js",
