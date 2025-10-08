@@ -33,6 +33,21 @@ app.use((req, res, next) => {
 // Middleware
 app.use(express.json());
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'SmartReport Pro Backend API', 
+    status: 'running',
+    timestamp: new Date().toISOString(),
+    endpoints: [
+      '/api/test',
+      '/api/health', 
+      '/api/user/stats',
+      '/api/reports'
+    ]
+  });
+});
+
 // Test route
 app.get('/api/test', (req, res) => {
   res.json({ 
