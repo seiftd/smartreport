@@ -4,9 +4,10 @@
   "description": "Transform Your Data into Professional Reports in Minutes",
   "main": "index.html",
   "scripts": {
-    "start": "npx live-server --port=3000 --open=/index.html",
-    "dev": "npx live-server --port=3000 --open=/index.html --watch=styles,js,*.html",
-    "build": "echo 'No build process needed for vanilla JS project'",
+    "start": "cd frontend && npm run dev",
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "deploy": "deploy\\react-deploy.bat",
     "test": "echo 'No tests configured yet'"
   },
   "keywords": [

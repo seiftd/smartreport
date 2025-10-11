@@ -1,615 +1,670 @@
-// Dashboard Module for SmartReport Pro
+// Dashboard Manager for SmartReport Pro
 class DashboardManager {
     constructor() {
         this.currentUser = null;
+        this.apiBaseUrl = 'https://smartreport-pro-backendone.vercel.app/api';
         this.reports = [];
-        this.templates = [];
-        this.uploadedData = null;
-        this.apiBaseUrl = 'https://smartreport-pro-backend.vercel.app/api';
+        this.currentStep = 1;
+        this.selectedTemplate = null;
+        this.uploadedFile = null;
         this.init();
     }
 
     init() {
+        console.log('🚀 DashboardManager init started');
         this.loadUserData();
         this.setupEventListeners();
-        this.loadReports();
-        this.loadTemplates();
-        this.updateDashboard();
-        this.setupFileUpload();
+        this.loadDashboardData();
+        this.initializeCharts();
+        this.initDarkMode();
+        console.log('✅ DashboardManager init completed');
     }
 
     loadUserData() {
         const userData = localStorage.getItem('smartreport_user');
-        if (userData) {
-            this.currentUser = JSON.parse(userData);
-            this.updateUserInfo();
-        } else {
+        const token = localStorage.getItem('smartreport_token');
+        
+        if (!userData || !token) {
             // Redirect to login if no user data
             window.location.href = 'index.html';
+            return;
         }
+
+        this.currentUser = JSON.parse(userData);
+        this.updateUserInterface();
     }
 
-    updateUserInfo() {
+    updateUserInterface() {
         if (this.currentUser) {
-            const userAvatar = document.getElementById('user-avatar');
-            const userName = document.getElementById('user-name');
-            const userEmail = document.getElementById('user-email');
-
-            if (userAvatar) userAvatar.textContent = this.currentUser.name.charAt(0).toUpperCase();
-            if (userName) userName.textContent = this.currentUser.name;
-            if (userEmail) userEmail.textContent = this.currentUser.email;
+            // Update user info in navigation safely
+            this.updateElement('user-name', this.currentUser.name || 'User');
+            this.updateElement('user-email', this.currentUser.email || 'user@example.com');
+            this.updateElement('user-avatar', (this.currentUser.name || 'U').charAt(0).toUpperCase());
+            this.updateElement('user-greeting', this.currentUser.name || 'User');
         }
     }
 
     setupEventListeners() {
-        // Modal controls
-        this.setupModalControls();
+        // Navigation
+        document.getElementById('nav-toggle')?.addEventListener('click', this.toggleMobileMenu.bind(this));
         
-        // Action buttons
-        this.setupActionButtons();
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.toggleDarkMode();
+            });
+        }
         
-        // Chart type buttons
-        this.setupChartTypeButtons();
-    }
-
-    setupModalControls() {
-        // Import modal
-        const importBtn = document.getElementById('import-data-btn');
-        const importModal = document.getElementById('import-modal');
-        const importClose = document.getElementById('import-close');
-
-        if (importBtn) {
-            importBtn.addEventListener('click', () => this.showImportModal());
-        }
-
-        if (importClose) {
-            importClose.addEventListener('click', () => this.hideModal('import-modal'));
-        }
-
-        // Template modal
-        const templateBtn = document.getElementById('create-report-btn');
-        const templateModal = document.getElementById('template-modal');
-        const templateClose = document.getElementById('template-close');
-
-        if (templateBtn) {
-            templateBtn.addEventListener('click', () => this.showTemplateModal());
-        }
-
-        if (templateClose) {
-            templateClose.addEventListener('click', () => this.hideModal('template-modal'));
-        }
-
-        // Builder modal
-        const builderModal = document.getElementById('builder-modal');
-        const builderClose = document.getElementById('builder-close');
-
-        if (builderClose) {
-            builderClose.addEventListener('click', () => this.hideModal('builder-modal'));
-        }
-
-        // Export modal
-        const exportModal = document.getElementById('export-modal');
-        const exportClose = document.getElementById('export-close');
-
-        if (exportClose) {
-            exportClose.addEventListener('click', () => this.hideModal('export-modal'));
-        }
-
+        // Dashboard actions
+        document.getElementById('create-report-btn')?.addEventListener('click', this.showCreateReportModal.bind(this));
+        document.getElementById('import-data-btn')?.addEventListener('click', this.showImportData.bind(this));
+        document.getElementById('create-first-report-btn')?.addEventListener('click', this.showCreateReportModal.bind(this));
+        
+        // Quick actions
+        document.getElementById('upload-data-btn')?.addEventListener('click', this.showImportData.bind(this));
+        document.getElementById('use-template-btn')?.addEventListener('click', this.showCreateReportModal.bind(this));
+        document.getElementById('create-chart-btn')?.addEventListener('click', this.showCreateReportModal.bind(this));
+        document.getElementById('export-data-btn')?.addEventListener('click', this.exportData.bind(this));
+        
+        // Plan upgrade
+        document.getElementById('upgrade-plan-btn')?.addEventListener('click', this.showUpgradeModal.bind(this));
+        document.getElementById('manage-plan-btn')?.addEventListener('click', this.showUpgradeModal.bind(this));
+        
+        // Create report modal
+        document.getElementById('create-report-close')?.addEventListener('click', this.hideCreateReportModal.bind(this));
+        document.getElementById('next-step-btn')?.addEventListener('click', this.nextStep.bind(this));
+        document.getElementById('prev-step-btn')?.addEventListener('click', this.prevStep.bind(this));
+        document.getElementById('generate-report-btn')?.addEventListener('click', this.generateReport.bind(this));
+        
+        // Template selection
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.addEventListener('click', this.selectTemplate.bind(this));
+        });
+        
+        // File upload
+        document.getElementById('browse-files-btn')?.addEventListener('click', () => {
+            document.getElementById('data-file-input').click();
+        });
+        
+        document.getElementById('data-file-input')?.addEventListener('change', this.handleFileUpload.bind(this));
+        
+        // Upgrade modal
+        document.getElementById('upgrade-close')?.addEventListener('click', this.hideUpgradeModal.bind(this));
+        document.getElementById('upgrade-to-pro')?.addEventListener('click', this.upgradeToPro.bind(this));
+        document.getElementById('upgrade-to-business')?.addEventListener('click', this.upgradeToBusiness.bind(this));
+        
         // Close modals when clicking outside
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                this.hideModal(e.target.id);
-            }
-        });
+        document.addEventListener('click', this.handleOutsideClick.bind(this));
     }
 
-    setupActionButtons() {
-        // Quick action cards
-        const actionCards = document.querySelectorAll('.action-card');
-        actionCards.forEach(card => {
-            card.addEventListener('click', (e) => {
-                const action = e.currentTarget.getAttribute('onclick');
-                if (action) {
-                    eval(action);
-                }
-            });
-        });
-    }
-
-    setupChartTypeButtons() {
-        const chartTypeBtns = document.querySelectorAll('.chart-type-btn');
-        chartTypeBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const chartType = e.currentTarget.dataset.type;
-                this.addVisualization(chartType);
-            });
-        });
-    }
-
-    setupFileUpload() {
-        const uploadArea = document.getElementById('upload-area');
-        const fileInput = document.getElementById('file-input');
-
-        if (uploadArea && fileInput) {
-            // Click to upload
-            uploadArea.addEventListener('click', () => {
-                fileInput.click();
-            });
-
-            // Drag and drop
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('dragover');
-            });
-
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('dragover');
-            });
-
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                this.handleFileUpload(files);
-            });
-
-            // File input change
-            fileInput.addEventListener('change', (e) => {
-                this.handleFileUpload(e.target.files);
-            });
-        }
-    }
-
-    async handleFileUpload(files) {
-        if (files.length === 0) return;
-
-        const file = files[0];
-        const allowedTypes = [
-            'text/csv',
-            'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        ];
-
-        if (!allowedTypes.includes(file.type)) {
-            this.showToast('Please upload a CSV or Excel file', 'error');
-            return;
-        }
-
-        this.showUploadProgress();
-
+    async loadDashboardData() {
         try {
-            const data = await this.parseFile(file);
-            this.uploadedData = data;
-            this.hideUploadProgress();
-            this.showToast('File uploaded successfully!', 'success');
-            this.hideModal('import-modal');
-            this.showBuilderModal();
+            console.log('📊 Loading dashboard data...');
+            // Load user stats
+            await this.loadUserStats();
+            
+            // Load recent reports
+            await this.loadRecentReports();
+            
+            // Check if upgrade banner should be shown
+            this.checkUpgradeBanner();
+            console.log('✅ Dashboard data loaded successfully');
+            
         } catch (error) {
-            this.hideUploadProgress();
-            this.showToast('Error parsing file. Please try again.', 'error');
+            console.error('❌ Failed to load dashboard data:', error);
         }
     }
 
-    async parseFile(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            
-            reader.onload = (e) => {
-                try {
-                    if (file.type === 'text/csv') {
-                        const csvData = this.parseCSV(e.target.result);
-                        resolve(csvData);
-                    } else {
-                        const workbook = XLSX.read(e.target.result, { type: 'binary' });
-                        const sheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[sheetName];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                        resolve(jsonData);
-                    }
-                } catch (error) {
-                    reject(error);
+    async loadUserStats() {
+        try {
+            const token = localStorage.getItem('smartreport_token');
+            const response = await fetch(`${this.apiBaseUrl}/user/stats`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
-            };
-            
-            reader.onerror = () => reject(new Error('Failed to read file'));
-            
-            if (file.type === 'text/csv') {
-                reader.readAsText(file);
+            });
+
+            if (response.ok) {
+                const stats = await response.json();
+                this.updateStatsDisplay(stats);
             } else {
-                reader.readAsBinaryString(file);
-            }
-        });
-    }
-
-    parseCSV(csvText) {
-        const lines = csvText.split('\n');
-        const headers = lines[0].split(',').map(h => h.trim());
-        const data = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            if (lines[i].trim()) {
-                const values = lines[i].split(',').map(v => v.trim());
-                const row = {};
-                headers.forEach((header, index) => {
-                    row[header] = values[index] || '';
+                // Use mock data if API fails
+                this.updateStatsDisplay({
+                    totalReports: 0,
+                    reportsThisMonth: 0,
+                    timeSaved: 0,
+                    currentPlan: 'free',
+                    reportsUsed: 0,
+                    reportsLimit: 3
                 });
-                data.push(row);
             }
+        } catch (error) {
+            console.error('Failed to load user stats:', error);
+            // Use mock data
+            this.updateStatsDisplay({
+                totalReports: 0,
+                reportsThisMonth: 0,
+                timeSaved: 0,
+                currentPlan: 'free',
+                reportsUsed: 0,
+                reportsLimit: 3
+            });
         }
-
-        return data;
     }
 
-    showUploadProgress() {
-        const progress = document.getElementById('upload-progress');
-        const progressFill = document.getElementById('progress-fill');
-        const progressText = document.getElementById('progress-text');
-
-        if (progress) {
-            progress.style.display = 'block';
+    updateStatsDisplay(stats) {
+        // Update dashboard metrics safely
+        this.updateElement('total-reports', stats.totalReports || 0);
+        this.updateElement('reports-this-month', stats.reportsThisMonth || 0);
+        this.updateElement('time-saved', `${stats.timeSaved || 0}h`);
+        this.updateElement('current-plan', stats.currentPlan || 'Free');
+        
+        // Update plan details
+        this.updateElement('plan-name', this.getPlanName(stats.currentPlan));
+        this.updateElement('plan-description', this.getPlanDescription(stats.currentPlan));
+        
+        // Update usage
+        const usagePercent = ((stats.reportsUsed || 0) / (stats.reportsLimit || 3)) * 100;
+        const usageFill = document.getElementById('usage-fill');
+        if (usageFill) {
+            usageFill.style.width = `${usagePercent}%`;
         }
+        this.updateElement('usage-current', stats.reportsUsed || 0);
+        this.updateElement('usage-limit', stats.reportsLimit || 3);
+    }
 
-        // Simulate progress
-        let width = 0;
-        const interval = setInterval(() => {
-            width += 10;
-            if (progressFill) progressFill.style.width = width + '%';
-            if (progressText) progressText.textContent = `Uploading... ${width}%`;
+    updateElement(id, value) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = value;
+        }
+    }
+
+    getPlanName(plan) {
+        const planNames = {
+            'free': 'Free Plan',
+            'pro': 'Pro Plan',
+            'business': 'Business Plan'
+        };
+        return planNames[plan] || 'Free Plan';
+    }
+
+    getPlanDescription(plan) {
+        const planDescriptions = {
+            'free': '3 reports per month',
+            'pro': 'Unlimited reports',
+            'business': 'Everything in Pro + Team features'
+        };
+        return planDescriptions[plan] || '3 reports per month';
+    }
+
+    checkUpgradeBanner() {
+        const userData = this.currentUser;
+        if (userData && userData.plan === 'free') {
+            const reportsUsed = userData.reportsUsed || 0;
+            const reportsLimit = userData.reportsLimit || 3;
             
-            if (width >= 100) {
-                clearInterval(interval);
+            if (reportsUsed >= reportsLimit * 0.8) { // Show when 80% used
+                const upgradeBanner = document.getElementById('upgrade-banner');
+                if (upgradeBanner) {
+                    upgradeBanner.style.display = 'block';
+                }
+                this.updateElement('reports-used', reportsUsed);
+                this.updateElement('reports-limit', reportsLimit);
             }
-        }, 100);
-    }
-
-    hideUploadProgress() {
-        const progress = document.getElementById('upload-progress');
-        if (progress) {
-            progress.style.display = 'none';
         }
     }
 
-    loadReports() {
-        const reportsData = localStorage.getItem('smartreport_reports');
-        if (reportsData) {
-            this.reports = JSON.parse(reportsData);
-        } else {
-            // Create sample reports for demo
-            this.reports = this.createSampleReports();
-            this.saveReports();
+    async loadRecentReports() {
+        try {
+            const token = localStorage.getItem('smartreport_token');
+            const response = await fetch(`${this.apiBaseUrl}/reports`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const reports = await response.json();
+                this.reports = reports;
+                this.displayRecentReports(reports);
+            } else {
+                this.displayRecentReports([]);
+            }
+        } catch (error) {
+            console.error('Failed to load reports:', error);
+            this.displayRecentReports([]);
         }
     }
 
-    createSampleReports() {
-        return [
-            {
-                id: '1',
-                title: 'Monthly Sales Report',
-                type: 'Business',
-                status: 'completed',
-                createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
-            },
-            {
-                id: '2',
-                title: 'Q4 Marketing Analysis',
-                type: 'Marketing',
-                status: 'processing',
-                createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-            },
-            {
-                id: '3',
-                title: 'Financial Summary',
-                type: 'Financial',
-                status: 'draft',
-                createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-                updatedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
-            }
-        ];
-    }
-
-    loadTemplates() {
-        this.templates = [
-            {
-                id: '1',
-                name: 'Business Report',
-                description: 'Professional business analysis template',
-                category: 'Business',
-                preview: 'business-preview.png'
-            },
-            {
-                id: '2',
-                name: 'Marketing Report',
-                description: 'Marketing performance and analytics',
-                category: 'Marketing',
-                preview: 'marketing-preview.png'
-            },
-            {
-                id: '3',
-                name: 'Financial Report',
-                description: 'Financial data visualization',
-                category: 'Financial',
-                preview: 'financial-preview.png'
-            },
-            {
-                id: '4',
-                name: 'Sales Report',
-                description: 'Sales performance tracking',
-                category: 'Sales',
-                preview: 'sales-preview.png'
-            },
-            {
-                id: '5',
-                name: 'Analytics Report',
-                description: 'Data analytics and insights',
-                category: 'Analytics',
-                preview: 'analytics-preview.png'
-            }
-        ];
-    }
-
-    updateDashboard() {
-        this.updateMetrics();
-        this.renderReports();
-        this.renderTemplates();
-    }
-
-    updateMetrics() {
-        const totalReports = this.reports.length;
-        const reportsThisMonth = this.reports.filter(r => {
-            const reportDate = new Date(r.createdAt);
-            const now = new Date();
-            return reportDate.getMonth() === now.getMonth() && 
-                   reportDate.getFullYear() === now.getFullYear();
-        }).length;
-
-        const storageUsed = totalReports * 2.5; // Simulate storage usage
-        const planStatus = this.currentUser?.plan || 'Free';
-
-        document.getElementById('total-reports').textContent = totalReports;
-        document.getElementById('reports-this-month').textContent = reportsThisMonth;
-        document.getElementById('storage-used').textContent = storageUsed.toFixed(1) + ' MB';
-        document.getElementById('plan-status').textContent = planStatus;
-    }
-
-    renderReports() {
-        const reportsGrid = document.getElementById('reports-grid');
-        if (!reportsGrid) return;
-
-        if (this.reports.length === 0) {
-            reportsGrid.innerHTML = `
+    displayRecentReports(reports) {
+        const reportsList = document.getElementById('reports-list');
+        
+        if (reports.length === 0) {
+            reportsList.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <h3 class="empty-title">No Reports Yet</h3>
-                    <p class="empty-description">
-                        Create your first report to get started with SmartReport Pro.
-                    </p>
-                    <button class="btn btn-primary" onclick="showTemplateModal()">
-                        Create Report
-                    </button>
+                    <i class="fas fa-file-alt"></i>
+                    <p>No reports yet. Create your first report!</p>
+                    <button class="btn btn-primary" id="create-first-report-btn">Create Report</button>
                 </div>
             `;
-            return;
-        }
-
-        reportsGrid.innerHTML = this.reports.map(report => `
-            <div class="report-card" onclick="dashboardManager.openReport('${report.id}')">
-                <div class="report-card-header">
-                    <div>
-                        <h3 class="report-title">${report.title}</h3>
-                        <span class="report-type">${report.type}</span>
+            
+            // Re-attach event listener
+            document.getElementById('create-first-report-btn')?.addEventListener('click', this.showCreateReportModal.bind(this));
+        } else {
+            reportsList.innerHTML = reports.slice(0, 5).map(report => `
+                <div class="report-item">
+                    <div class="report-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="report-info">
+                        <h5>${report.title}</h5>
+                        <p>Created ${new Date(report.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div class="report-actions">
-                        <button class="action-btn" onclick="event.stopPropagation(); dashboardManager.editReport('${report.id}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-btn" onclick="event.stopPropagation(); dashboardManager.deleteReport('${report.id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <button class="btn btn-sm btn-outline" onclick="dashboardManager.viewReport('${report.id}')">View</button>
+                        <button class="btn btn-sm btn-outline" onclick="dashboardManager.downloadReport('${report.id}')">Download</button>
                     </div>
                 </div>
-                <div class="report-preview">
-                    <i class="fas fa-chart-bar"></i>
-                </div>
-                <div class="report-meta">
-                    <div class="report-date">
-                        <i class="fas fa-calendar"></i>
-                        ${this.formatDate(report.updatedAt)}
-                    </div>
-                    <div class="report-status">
-                        <span class="status-badge status-${report.status}">
-                            ${report.status}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    renderTemplates() {
-        const templateGrid = document.getElementById('template-grid');
-        if (!templateGrid) return;
-
-        templateGrid.innerHTML = this.templates.map(template => `
-            <div class="template-card" onclick="dashboardManager.selectTemplate('${template.id}')">
-                <div class="template-preview">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <div class="template-name">${template.name}</div>
-                <div class="template-description">${template.description}</div>
-            </div>
-        `).join('');
-    }
-
-    // Modal methods
-    showImportModal() {
-        this.showModal('import-modal');
-    }
-
-    showTemplateModal() {
-        this.showModal('template-modal');
-    }
-
-    showBuilderModal() {
-        this.showModal('builder-modal');
-    }
-
-    showExportModal() {
-        this.showModal('export-modal');
-    }
-
-    showModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
+            `).join('');
         }
     }
 
-    hideModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
+    initializeCharts() {
+        // Initialize usage chart
+        const ctx = document.getElementById('usage-chart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Reports Generated',
+                        data: [2, 3, 1, 4, 2, 5],
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
         }
     }
 
-    // Report actions
-    openReport(reportId) {
-        const report = this.reports.find(r => r.id === reportId);
-        if (report) {
-            this.showToast(`Opening ${report.title}...`, 'info');
-            // In a real app, this would navigate to the report viewer
+    // Modal Management
+    showCreateReportModal() {
+        document.getElementById('create-report-modal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        this.resetCreateReportForm();
+    }
+
+    hideCreateReportModal() {
+        document.getElementById('create-report-modal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    showUpgradeModal() {
+        document.getElementById('upgrade-modal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    hideUpgradeModal() {
+        document.getElementById('upgrade-modal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Create Report Steps
+    resetCreateReportForm() {
+        this.currentStep = 1;
+        this.selectedTemplate = null;
+        this.uploadedFile = null;
+        this.updateStepDisplay();
+    }
+
+    updateStepDisplay() {
+        // Update step indicators
+        document.querySelectorAll('.step').forEach((step, index) => {
+            step.classList.toggle('active', index + 1 === this.currentStep);
+            step.classList.toggle('completed', index + 1 < this.currentStep);
+        });
+
+        // Update step panels
+        document.querySelectorAll('.step-panel').forEach((panel, index) => {
+            panel.classList.toggle('active', index + 1 === this.currentStep);
+        });
+
+        // Update buttons
+        const prevBtn = document.getElementById('prev-step-btn');
+        const nextBtn = document.getElementById('next-step-btn');
+        const generateBtn = document.getElementById('generate-report-btn');
+
+        prevBtn.style.display = this.currentStep > 1 ? 'block' : 'none';
+        nextBtn.style.display = this.currentStep < 4 ? 'block' : 'none';
+        generateBtn.style.display = this.currentStep === 4 ? 'block' : 'none';
+    }
+
+    nextStep() {
+        if (this.currentStep < 4) {
+            this.currentStep++;
+            this.updateStepDisplay();
         }
     }
 
-    editReport(reportId) {
-        const report = this.reports.find(r => r.id === reportId);
-        if (report) {
-            this.showToast(`Editing ${report.title}...`, 'info');
-            this.showBuilderModal();
+    prevStep() {
+        if (this.currentStep > 1) {
+            this.currentStep--;
+            this.updateStepDisplay();
         }
     }
 
-    deleteReport(reportId) {
-        if (confirm('Are you sure you want to delete this report?')) {
-            this.reports = this.reports.filter(r => r.id !== reportId);
-            this.saveReports();
-            this.updateDashboard();
-            this.showToast('Report deleted successfully', 'success');
-        }
-    }
-
-    selectTemplate(templateId) {
-        const template = this.templates.find(t => t.id === templateId);
-        if (template) {
-            this.showToast(`Selected ${template.name} template`, 'success');
-            this.hideModal('template-modal');
-            this.showBuilderModal();
-        }
-    }
-
-    addVisualization(chartType) {
-        if (!this.uploadedData) {
-            this.showToast('Please upload data first', 'warning');
+    selectTemplate(event) {
+        const templateCard = event.currentTarget;
+        const template = templateCard.dataset.template;
+        
+        // Remove previous selection
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Select current template
+        templateCard.classList.add('selected');
+        this.selectedTemplate = template;
+        
+        // Check if template requires Pro plan
+        const badge = templateCard.querySelector('.template-badge');
+        if (badge && badge.textContent === 'Pro' && this.currentUser.plan === 'free') {
+            this.showUpgradeModal();
             return;
         }
-
-        this.showToast(`Adding ${chartType} visualization...`, 'info');
-        // In a real app, this would add the visualization to the report builder
     }
 
-    // Export methods
-    exportToPDF() {
-        this.showToast('Exporting to PDF...', 'info');
-        this.hideModal('export-modal');
-        // In a real app, this would generate and download the PDF
+    handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            this.uploadedFile = file;
+            this.updateUploadArea(file);
+        }
     }
 
-    exportToExcel() {
-        this.showToast('Exporting to Excel...', 'info');
-        this.hideModal('export-modal');
-        // In a real app, this would generate and download the Excel file
+    updateUploadArea(file) {
+        const uploadArea = document.getElementById('upload-area');
+        uploadArea.innerHTML = `
+            <div class="upload-success">
+                <i class="fas fa-check-circle"></i>
+                <h5>File Uploaded Successfully</h5>
+                <p>${file.name} (${(file.size / 1024).toFixed(1)} KB)</p>
+                <button class="btn btn-outline btn-sm" onclick="dashboardManager.removeFile()">Remove</button>
+            </div>
+        `;
     }
 
-    shareReport() {
-        this.showToast('Generating shareable link...', 'info');
-        this.hideModal('export-modal');
-        // In a real app, this would generate a shareable link
-    }
-
-    // Utility methods
-    saveReports() {
-        localStorage.setItem('smartreport_reports', JSON.stringify(this.reports));
-    }
-
-    formatDate(dateString) {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
+    removeFile() {
+        this.uploadedFile = null;
+        document.getElementById('data-file-input').value = '';
+        document.getElementById('upload-area').innerHTML = `
+            <div class="upload-content">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h5>Drag & drop your file here</h5>
+                <p>or <button class="btn btn-link" id="browse-files-btn">browse files</button></p>
+                <p class="upload-formats">Supports: CSV, Excel, JSON</p>
+            </div>
+        `;
+        
+        // Re-attach event listener
+        document.getElementById('browse-files-btn')?.addEventListener('click', () => {
+            document.getElementById('data-file-input').click();
         });
     }
 
-    showToast(message, type = 'info') {
-        if (window.smartReportApp) {
-            window.smartReportApp.showToast(message, type);
+    async generateReport() {
+        if (!this.selectedTemplate || !this.uploadedFile) {
+            alert('Please select a template and upload a file.');
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('template', this.selectedTemplate);
+            formData.append('file', this.uploadedFile);
+            formData.append('title', document.getElementById('report-title').value);
+            formData.append('description', document.getElementById('report-description').value);
+
+            const token = localStorage.getItem('smartreport_token');
+            const response = await fetch(`${this.apiBaseUrl}/reports/generate`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                this.hideCreateReportModal();
+                this.showSuccessMessage('Report generated successfully!');
+                this.loadDashboardData(); // Refresh dashboard
+            } else {
+                const error = await response.json();
+                alert('Failed to generate report: ' + error.message);
+            }
+        } catch (error) {
+            console.error('Failed to generate report:', error);
+            alert('Failed to generate report. Please try again.');
         }
     }
-}
 
-// Global functions for onclick handlers
-function showImportModal() {
-    if (window.dashboardManager) {
-        window.dashboardManager.showImportModal();
+    // Plan Upgrade
+    async upgradeToPro() {
+        try {
+            const token = localStorage.getItem('smartreport_token');
+            const response = await fetch(`${this.apiBaseUrl}/subscription/upgrade`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ plan: 'pro' })
+            });
+
+            if (response.ok) {
+                this.hideUpgradeModal();
+                this.showSuccessMessage('Plan upgraded to Pro!');
+                this.loadDashboardData();
+            } else {
+                const error = await response.json();
+                alert('Failed to upgrade plan: ' + error.message);
+            }
+        } catch (error) {
+            console.error('Failed to upgrade plan:', error);
+            alert('Failed to upgrade plan. Please try again.');
+        }
     }
-}
 
-function showTemplateModal() {
-    if (window.dashboardManager) {
-        window.dashboardManager.showTemplateModal();
+    async upgradeToBusiness() {
+        try {
+            const token = localStorage.getItem('smartreport_token');
+            const response = await fetch(`${this.apiBaseUrl}/subscription/upgrade`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ plan: 'business' })
+            });
+
+            if (response.ok) {
+                this.hideUpgradeModal();
+                this.showSuccessMessage('Plan upgraded to Business!');
+                this.loadDashboardData();
+            } else {
+                const error = await response.json();
+                alert('Failed to upgrade plan: ' + error.message);
+            }
+        } catch (error) {
+            console.error('Failed to upgrade plan:', error);
+            alert('Failed to upgrade plan. Please try again.');
+        }
     }
-}
 
-function showBuilderModal() {
-    if (window.dashboardManager) {
-        window.dashboardManager.showBuilderModal();
+    // User Menu
+    showUserMenu() {
+        const dropdown = document.getElementById('user-dropdown');
+        if (dropdown) {
+            const isVisible = dropdown.style.display === 'block';
+            dropdown.style.display = isVisible ? 'none' : 'block';
+            
+            // Close dropdown when clicking outside
+            if (!isVisible) {
+                setTimeout(() => {
+                    document.addEventListener('click', this.hideUserMenu.bind(this), { once: true });
+                }, 100);
+            }
+        }
     }
-}
 
-function showExportModal() {
-    if (window.dashboardManager) {
-        window.dashboardManager.showExportModal();
+    showProfile() {
+        this.hideUserMenu();
+        alert('Profile page coming soon!');
     }
-}
 
-function exportToPDF() {
-    if (window.dashboardManager) {
-        window.dashboardManager.exportToPDF();
+    showSettings() {
+        this.hideUserMenu();
+        alert('Settings page coming soon!');
     }
-}
 
-function exportToExcel() {
-    if (window.dashboardManager) {
-        window.dashboardManager.exportToExcel();
+    showBilling() {
+        this.hideUserMenu();
+        this.showUpgradeModal();
     }
-}
 
-function shareReport() {
-    if (window.dashboardManager) {
-        window.dashboardManager.shareReport();
+    hideUserMenu() {
+        document.getElementById('user-dropdown').style.display = 'none';
+    }
+
+    logout() {
+        localStorage.removeItem('smartreport_user');
+        localStorage.removeItem('smartreport_token');
+        window.location.href = 'index.html';
+    }
+
+    // Utility Methods
+    showImportData() {
+        alert('Import data functionality coming soon!');
+    }
+
+    exportData() {
+        alert('Export data functionality coming soon!');
+    }
+
+    viewReport(reportId) {
+        alert(`View report ${reportId} - coming soon!`);
+    }
+
+    downloadReport(reportId) {
+        alert(`Download report ${reportId} - coming soon!`);
+    }
+
+    showSuccessMessage(message) {
+        // Create and show success toast
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-success';
+        toast.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+
+    toggleMobileMenu() {
+        const navMenu = document.getElementById('nav-menu');
+        navMenu.classList.toggle('active');
+    }
+
+    handleOutsideClick(event) {
+        // Close user dropdown if clicking outside
+        const userMenu = document.querySelector('.user-menu');
+        const dropdown = document.getElementById('user-dropdown');
+        
+        if (!userMenu.contains(event.target) && !dropdown.contains(event.target)) {
+            this.hideUserMenu();
+        }
+    }
+
+    toggleDarkMode() {
+        const body = document.body;
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const icon = darkModeToggle.querySelector('i');
+        
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+            localStorage.setItem('darkMode', 'false');
+            icon.className = 'fas fa-moon';
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            localStorage.setItem('darkMode', 'true');
+            icon.className = 'fas fa-sun';
+        }
+    }
+
+    initDarkMode() {
+        const darkMode = localStorage.getItem('darkMode');
+        const body = document.body;
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const icon = darkModeToggle?.querySelector('i');
+        
+        if (darkMode === 'true') {
+            body.setAttribute('data-theme', 'dark');
+            if (icon) icon.className = 'fas fa-sun';
+        } else {
+            body.removeAttribute('data-theme');
+            if (icon) icon.className = 'fas fa-moon';
+        }
+    }
+
+    switchAccount() {
+        alert('Switch Account - Feature coming soon!');
+    }
+
+    toggleDarkMode() {
+        const body = document.body;
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const icon = darkModeToggle.querySelector('i');
+        
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+            localStorage.setItem('darkMode', 'false');
+            icon.className = 'fas fa-moon';
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            localStorage.setItem('darkMode', 'true');
+            icon.className = 'fas fa-sun';
+        }
     }
 }
 
 // Initialize dashboard when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
     window.dashboardManager = new DashboardManager();
 });
-
-// Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = DashboardManager;
-}

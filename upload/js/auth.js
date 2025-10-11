@@ -2,7 +2,7 @@
 class AuthManager {
     constructor() {
         this.currentUser = null;
-        this.apiBaseUrl = 'https://smartreport-pro-backend.vercel.app/api';
+        this.apiBaseUrl = 'https://smartreport-pro-backendone.vercel.app/api';
         this.init();
     }
 
@@ -36,6 +36,31 @@ class AuthManager {
                 e.preventDefault();
                 this.handleSignup();
             });
+        }
+
+        // Google login buttons
+        const googleLoginBtn = document.getElementById('google-login-btn');
+        if (googleLoginBtn) {
+            console.log('✅ Google login button found');
+            googleLoginBtn.addEventListener('click', (e) => {
+                console.log('🖱️ Google login button clicked');
+                e.preventDefault();
+                this.handleGoogleLogin();
+            });
+        } else {
+            console.log('❌ Google login button not found');
+        }
+
+        const googleSignupBtn = document.getElementById('google-signup-btn');
+        if (googleSignupBtn) {
+            console.log('✅ Google signup button found');
+            googleSignupBtn.addEventListener('click', (e) => {
+                console.log('🖱️ Google signup button clicked');
+                e.preventDefault();
+                this.handleGoogleLogin();
+            });
+        } else {
+            console.log('❌ Google signup button not found');
         }
     }
 
@@ -84,6 +109,49 @@ class AuthManager {
         } catch (error) {
             this.hideLoading();
             this.showError('Login failed: ' + error.message);
+        }
+    }
+
+    async handleGoogleLogin() {
+        console.log('🚀 handleGoogleLogin called');
+        this.showLoading('Signing in with Google...');
+
+        try {
+            console.log('🔥 Calling window.signInWithGoogle...');
+            // Use Firebase Google authentication
+            const result = await window.signInWithGoogle();
+            console.log('✅ Google auth result:', result);
+            const { user, idToken } = result;
+
+            // Send to backend for verification and user creation
+            const response = await fetch(`${this.apiBaseUrl}/auth/firebase`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ idToken })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Google login failed');
+            }
+
+            this.currentUser = data.user;
+            localStorage.setItem('smartreport_user', JSON.stringify(data.user));
+            localStorage.setItem('smartreport_token', data.token);
+            
+            this.hideLoading();
+            this.showSuccess('Google login successful! Redirecting...');
+            
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1500);
+
+        } catch (error) {
+            this.hideLoading();
+            this.showError('Google login failed: ' + error.message);
         }
     }
 

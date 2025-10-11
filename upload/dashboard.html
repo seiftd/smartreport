@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Dashboard - SmartReport Pro</title>
     <meta name="description" content="Create and manage your professional reports with SmartReport Pro dashboard.">
     
     <!-- CSS -->
-    <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/components.css">
-    <link rel="stylesheet" href="styles/responsive.css">
+    <link rel="stylesheet" href="styles/main.css?v=9">
+    <link rel="stylesheet" href="styles/components.css?v=9">
+    <link rel="stylesheet" href="styles/responsive.css?v=9">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,6 +24,9 @@
     
     <!-- FilePond CSS -->
     <link href="https://unpkg.com/filepond@^4/dist/filepond.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -30,19 +36,29 @@
                 <img src="logo.jpg" alt="SmartReport Pro" class="nav-logo">
                 <span>SmartReport Pro</span>
             </div>
-            <div class="nav-menu">
+            <div class="nav-menu" id="nav-menu">
                 <a href="index.html" class="nav-link">Home</a>
-                <a href="#reports" class="nav-link">Reports</a>
-                <a href="#templates" class="nav-link">Templates</a>
+                <button class="nav-link active" onclick="showDashboardSection()">Dashboard</button>
+                <button class="nav-link" onclick="showReportsSection()">Reports</button>
+                <button class="nav-link" onclick="showTemplatesSection()">Templates</button>
+                <button class="nav-link" onclick="showAnalyticsSection()">Analytics</button>
+                <button class="dark-mode-toggle" id="dark-mode-toggle" title="Toggle Dark Mode">
+                    <i class="fas fa-moon"></i>
+                </button>
                 <div class="nav-auth">
-                    <div class="user-menu" onclick="authManager.showUserMenu()">
+                    <div class="user-menu" onclick="dashboardManager.showUserMenu()">
                         <div class="user-avatar" id="user-avatar">U</div>
                         <div class="user-info">
-                            <div class="user-name" id="user-name">User</div>
-                            <div class="user-email" id="user-email">user@example.com</div>
+                            <div class="user-name" id="user-name">Loading...</div>
+                            <div class="user-email" id="user-email">Loading...</div>
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
             </div>
         </div>
     </nav>
@@ -50,9 +66,9 @@
     <!-- Dashboard Header -->
     <div class="dashboard-header">
         <div class="dashboard-nav">
-            <div>
-                <h1 class="dashboard-title">Dashboard</h1>
-                <p class="dashboard-subtitle">Welcome back! Create and manage your reports.</p>
+            <div class="welcome-section">
+                <h1 class="dashboard-title">Welcome back, <span id="user-greeting">User</span>! 👋</h1>
+                <p class="dashboard-subtitle">Create and manage your professional reports with ease.</p>
             </div>
             <div class="dashboard-actions">
                 <button class="btn btn-outline" id="import-data-btn">
@@ -69,179 +85,391 @@
 
     <!-- Dashboard Content -->
     <div class="dashboard">
-        <div class="container">
-            <!-- Quick Stats -->
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-value" id="total-reports">0</div>
-                    <div class="metric-label">Total Reports</div>
-                    <div class="metric-change positive">+2 this week</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="reports-this-month">0</div>
-                    <div class="metric-label">This Month</div>
-                    <div class="metric-change positive">+15%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="storage-used">0 MB</div>
-                    <div class="metric-label">Storage Used</div>
-                    <div class="metric-change neutral">2.1 GB limit</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="plan-status">Free</div>
-                    <div class="metric-label">Current Plan</div>
-                    <div class="metric-change neutral">3 reports left</div>
-                </div>
-            </div>
-
-            <!-- Recent Reports -->
-            <div class="reports-section">
-                <div class="section-header">
-                    <h2>Recent Reports</h2>
-                    <button class="btn btn-outline" id="view-all-reports">View All</button>
-                </div>
-                <div class="reports-grid" id="reports-grid">
-                    <!-- Reports will be populated by JavaScript -->
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <div class="section-header">
-                    <h2>Quick Actions</h2>
-                </div>
-                <div class="actions-grid">
-                    <div class="action-card" onclick="showImportModal()">
-                        <div class="action-icon">
-                            <i class="fas fa-file-upload"></i>
-                        </div>
-                        <h3>Import Data</h3>
-                        <p>Upload Excel or CSV files to create reports</p>
-                    </div>
-                    <div class="action-card" onclick="showTemplateModal()">
-                        <div class="action-icon">
-                            <i class="fas fa-palette"></i>
-                        </div>
-                        <h3>Choose Template</h3>
-                        <p>Select from professional report templates</p>
-                    </div>
-                    <div class="action-card" onclick="showBuilderModal()">
-                        <div class="action-icon">
-                            <i class="fas fa-chart-bar"></i>
-                        </div>
-                        <h3>Build Report</h3>
-                        <p>Create custom visualizations and charts</p>
-                    </div>
-                    <div class="action-card" onclick="showExportModal()">
-                        <div class="action-icon">
-                            <i class="fas fa-download"></i>
-                        </div>
-                        <h3>Export Report</h3>
-                        <p>Download as PDF or Excel format</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Import Data Modal -->
-    <div class="modal" id="import-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Import Data</h3>
-                <button class="modal-close" id="import-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="upload-area" id="upload-area">
-                    <div class="upload-icon">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                    </div>
-                    <div class="upload-text">Drag & drop your files here</div>
-                    <div class="upload-subtext">or click to browse</div>
-                    <input type="file" id="file-input" multiple accept=".csv,.xlsx,.xls" style="display: none;">
-                </div>
-                <div class="upload-progress" id="upload-progress" style="display: none;">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progress-fill"></div>
-                    </div>
-                    <div class="progress-text" id="progress-text">Uploading...</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Template Selection Modal -->
-    <div class="modal" id="template-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Choose Template</h3>
-                <button class="modal-close" id="template-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="template-grid" id="template-grid">
-                    <!-- Templates will be populated by JavaScript -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Report Builder Modal -->
-    <div class="modal" id="builder-modal">
-        <div class="modal-content large">
-            <div class="modal-header">
-                <h3>Report Builder</h3>
-                <button class="modal-close" id="builder-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="report-builder">
-                    <div class="builder-sidebar">
-                        <div class="sidebar-section">
-                            <h3 class="sidebar-title">
-                                <i class="fas fa-database"></i>
-                                Data Source
-                            </h3>
-                            <div class="data-source-info">
-                                <p>No data uploaded yet</p>
-                                <button class="btn btn-outline btn-small" onclick="showImportModal()">
-                                    Upload Data
-                                </button>
-                            </div>
-                        </div>
-                        <div class="sidebar-section">
-                            <h3 class="sidebar-title">
-                                <i class="fas fa-chart-bar"></i>
-                                Visualizations
-                            </h3>
-                            <div class="chart-types">
-                                <button class="chart-type-btn" data-type="line">
+        <div class="dashboard-container">
+            <!-- Dashboard Section -->
+            <div id="dashboard-section" class="dashboard-section active">
+                <!-- Modern Dashboard Layout -->
+                <div class="modern-dashboard">
+                    <!-- Left Column -->
+                    <div class="dashboard-left">
+                        <!-- Report Generation Tracker -->
+                        <div class="modern-card report-tracker">
+                            <div class="card-header">
+                                <div class="card-title">
                                     <i class="fas fa-chart-line"></i>
-                                    Line Chart
-                                </button>
-                                <button class="chart-type-btn" data-type="bar">
-                                    <i class="fas fa-chart-bar"></i>
-                                    Bar Chart
-                                </button>
-                                <button class="chart-type-btn" data-type="pie">
-                                    <i class="fas fa-chart-pie"></i>
-                                    Pie Chart
-                                </button>
-                                <button class="chart-type-btn" data-type="table">
-                                    <i class="fas fa-table"></i>
-                                    Data Table
+                                    <h3>Report Generation Tracker</h3>
+                                </div>
+                                <div class="timeframe-selector">
+                                    <select id="timeframe-select">
+                                        <option value="week">Week</option>
+                                        <option value="month">Month</option>
+                                        <option value="year">Year</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="tracker-chart">
+                                <div class="chart-bars">
+                                    <div class="bar-item">
+                                        <div class="bar" style="height: 60%"></div>
+                                        <span class="bar-label">S</span>
+                                    </div>
+                                    <div class="bar-item">
+                                        <div class="bar" style="height: 80%"></div>
+                                        <span class="bar-label">M</span>
+                                    </div>
+                                    <div class="bar-item active">
+                                        <div class="bar" style="height: 100%"></div>
+                                        <span class="bar-label">T</span>
+                                        <div class="bar-value">5</div>
+                                    </div>
+                                    <div class="bar-item">
+                                        <div class="bar" style="height: 70%"></div>
+                                        <span class="bar-label">W</span>
+                                    </div>
+                                    <div class="bar-item">
+                                        <div class="bar" style="height: 90%"></div>
+                                        <span class="bar-label">T</span>
+                                    </div>
+                                    <div class="bar-item">
+                                        <div class="bar" style="height: 50%"></div>
+                                        <span class="bar-label">F</span>
+                                    </div>
+                                    <div class="bar-item">
+                                        <div class="bar" style="height: 40%"></div>
+                                        <span class="bar-label">S</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tracker-summary">
+                                <div class="summary-value">+25%</div>
+                                <div class="summary-text">This week's reports are higher than last week's</div>
+                            </div>
+                        </div>
+
+                        <!-- Team Collaboration -->
+                        <div class="modern-card team-connect">
+                            <div class="card-header">
+                                <h3>Let's Connect</h3>
+                                <a href="#" class="see-all-link">See all</a>
+                            </div>
+                            <div class="connect-item">
+                                <div class="connect-avatar">
+                                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face" alt="Team Member">
+                                </div>
+                                <div class="connect-info">
+                                    <div class="connect-name">Sarah Johnson</div>
+                                    <div class="connect-title">Data Analyst</div>
+                                </div>
+                                <div class="connect-badge">Senior</div>
+                                <button class="connect-btn">
+                                    <i class="fas fa-plus"></i>
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Premium Features -->
+                        <div class="modern-card premium-unlock">
+                            <div class="premium-content">
+                                <h3>Unlock Premium Features</h3>
+                                <p>Get access to exclusive templates and expand your reporting capabilities</p>
+                                <div class="premium-pattern"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="builder-main">
-                        <div class="report-preview-area">
+
+                    <!-- Right Column -->
+                    <div class="dashboard-right">
+                        <!-- Recent Reports -->
+                        <div class="modern-card recent-reports">
+                            <div class="card-header">
+                                <h3>Your Recent Reports</h3>
+                                <a href="#" class="see-all-link">See all Reports</a>
+                            </div>
+                            <div class="reports-list">
+                                <div class="report-item expanded">
+                                    <div class="report-icon">
+                                        <i class="fas fa-chart-bar"></i>
+                                    </div>
+                                    <div class="report-content">
+                                        <div class="report-title">Sales Performance Report</div>
+                                        <div class="report-rate">$50/report</div>
+                                        <div class="report-status paid">Completed</div>
+                                        <div class="report-tags">
+                                            <span class="tag">Business</span>
+                                            <span class="tag">Analytics</span>
+                                        </div>
+                                        <div class="report-description">
+                                            Comprehensive sales analysis with KPIs, trends, and actionable insights for Q1 performance.
+                                        </div>
+                                        <div class="report-meta">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <span>Remote</span>
+                                            <span class="time">2h ago</span>
+                                        </div>
+                                    </div>
+                                    <div class="report-action">
+                                        <i class="fas fa-chevron-up"></i>
+                                    </div>
+                                </div>
+
+                                <div class="report-item">
+                                    <div class="report-icon">
+                                        <i class="fas fa-file-alt"></i>
+                                    </div>
+                                    <div class="report-content">
+                                        <div class="report-title">Financial Summary</div>
+                                        <div class="report-rate">$75/report</div>
+                                        <div class="report-status pending">In Progress</div>
+                                    </div>
+                                    <div class="report-action">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+
+                                <div class="report-item">
+                                    <div class="report-icon">
+                                        <i class="fas fa-chart-pie"></i>
+                                    </div>
+                                    <div class="report-content">
+                                        <div class="report-title">Marketing Analytics</div>
+                                        <div class="report-rate">$60/report</div>
+                                        <div class="report-status paid">Completed</div>
+                                    </div>
+                                    <div class="report-action">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Report Progress -->
+                        <div class="modern-card report-progress">
+                            <div class="card-header">
+                                <h3>Report Progress</h3>
+                                <div class="date-selector">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>March 15, 2024</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="progress-metrics">
+                                <div class="metric-item">
+                                    <div class="metric-value">24</div>
+                                    <div class="metric-label">Reports Created</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value">8</div>
+                                    <div class="metric-label">Templates Used</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value">12</div>
+                                    <div class="metric-label">Downloads</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- Plan Upgrade Banner -->
+            <div class="upgrade-banner" id="upgrade-banner" style="display: none;">
+                <div class="upgrade-content">
+                    <div class="upgrade-text">
+                        <h3>Upgrade to Pro for Unlimited Reports</h3>
+                        <p>You've used <span id="reports-used">0</span> of <span id="reports-limit">3</span> free reports this month.</p>
+                    </div>
+                    <button class="btn btn-primary" id="upgrade-plan-btn">
+                        <i class="fas fa-crown"></i>
+                        Upgrade Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="dashboard-grid">
+                <!-- Recent Reports -->
+                <div class="dashboard-card modern-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-file-alt card-icon"></i>
+                            <h3>Recent Reports</h3>
+                        </div>
+                        <a href="#reports" class="btn btn-outline btn-sm">View All</a>
+                    </div>
+                    <div class="card-content">
+                        <div class="reports-list" id="reports-list">
                             <div class="empty-state">
                                 <div class="empty-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <h4>No reports yet</h4>
+                                <p>Create your first professional report and start saving time!</p>
+                                <button class="btn btn-primary btn-large" id="create-first-report-btn">
+                                    <i class="fas fa-plus"></i>
+                                    Create Your First Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Templates Section -->
+                <div class="dashboard-card modern-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-magic card-icon"></i>
+                            <h3>Report Templates</h3>
+                        </div>
+                        <span class="badge badge-primary">New</span>
+                    </div>
+                    <div class="card-content">
+                        <div class="templates-preview">
+                            <div class="template-item">
+                                <div class="template-icon business">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                <div class="template-info">
+                                    <h5>Business Report</h5>
+                                    <p>Professional business analysis</p>
+                                    <span class="template-badge free">Free</span>
+                                </div>
+                            </div>
+                            <div class="template-item">
+                                <div class="template-icon financial">
                                     <i class="fas fa-chart-line"></i>
                                 </div>
-                                <h3 class="empty-title">Start Building Your Report</h3>
-                                <p class="empty-description">
-                                    Upload your data and choose visualizations to create a professional report.
-                                </p>
+                                <div class="template-info">
+                                    <h5>Financial Report</h5>
+                                    <p>Financial data visualization</p>
+                                    <span class="template-badge free">Free</span>
+                                </div>
+                            </div>
+                            <div class="template-item">
+                                <div class="template-icon marketing">
+                                    <i class="fas fa-bullhorn"></i>
+                                </div>
+                                <div class="template-info">
+                                    <h5>Marketing Report</h5>
+                                    <p>Marketing performance analysis</p>
+                                    <span class="template-badge pro">Pro</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-block" id="browse-templates-btn">
+                            <i class="fas fa-th-large"></i>
+                            Browse All Templates
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="dashboard-card modern-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-bolt card-icon"></i>
+                            <h3>Quick Actions</h3>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="quick-actions-grid">
+                            <button class="quick-action-card" id="upload-data-btn">
+                                <div class="action-icon upload">
+                                    <i class="fas fa-upload"></i>
+                                </div>
+                                <h5>Upload Data</h5>
+                                <p>Import CSV, Excel files</p>
+                            </button>
+                            <button class="quick-action-card" id="use-template-btn">
+                                <div class="action-icon template">
+                                    <i class="fas fa-magic"></i>
+                                </div>
+                                <h5>Use Template</h5>
+                                <p>Choose from templates</p>
+                            </button>
+                            <button class="quick-action-card" id="create-chart-btn">
+                                <div class="action-icon chart">
+                                    <i class="fas fa-chart-pie"></i>
+                                </div>
+                                <h5>Create Chart</h5>
+                                <p>Build visualizations</p>
+                            </button>
+                            <button class="quick-action-card" id="export-data-btn">
+                                <div class="action-icon export">
+                                    <i class="fas fa-download"></i>
+                                </div>
+                                <h5>Export Data</h5>
+                                <p>Download reports</p>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usage Analytics -->
+                <div class="dashboard-card modern-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-chart-bar card-icon"></i>
+                            <h3>Usage Analytics</h3>
+                        </div>
+                        <div class="chart-controls">
+                            <button class="btn btn-sm btn-outline active">7D</button>
+                            <button class="btn btn-sm btn-outline">30D</button>
+                            <button class="btn btn-sm btn-outline">90D</button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="chart-container">
+                            <canvas id="usage-chart" width="400" height="200"></canvas>
+                        </div>
+                        <div class="chart-stats">
+                            <div class="chart-stat">
+                                <span class="stat-label">Reports Created</span>
+                                <span class="stat-value">12</span>
+                            </div>
+                            <div class="chart-stat">
+                                <span class="stat-label">Time Saved</span>
+                                <span class="stat-value">24h</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plan Details -->
+                <div class="dashboard-card modern-card plan-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-crown card-icon"></i>
+                            <h3>Your Plan</h3>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="manage-plan-btn">Upgrade</button>
+                    </div>
+                    <div class="card-content">
+                        <div class="plan-details">
+                            <div class="plan-info">
+                                <h4 id="plan-name">Free Plan</h4>
+                                <p id="plan-description">3 reports per month</p>
+                                <div class="plan-features">
+                                    <div class="feature-item">
+                                        <i class="fas fa-check"></i>
+                                        <span>Basic Templates</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <i class="fas fa-check"></i>
+                                        <span>CSV Import</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <i class="fas fa-times"></i>
+                                        <span>Advanced Analytics</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="plan-usage">
+                                <div class="usage-header">
+                                    <span>Usage this month</span>
+                                    <span id="usage-current">0</span>/<span id="usage-limit">3</span>
+                                </div>
+                                <div class="usage-bar">
+                                    <div class="usage-fill" id="usage-fill" style="width: 0%"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -250,40 +478,508 @@
         </div>
     </div>
 
-    <!-- Export Modal -->
-    <div class="modal" id="export-modal">
-        <div class="modal-content">
+    <!-- Create Report Modal -->
+    <div class="modal" id="create-report-modal">
+        <div class="modal-content modal-large">
             <div class="modal-header">
-                <h3>Export Report</h3>
-                <button class="modal-close" id="export-close">&times;</button>
+                <h3>Create New Report</h3>
+                <button class="modal-close" id="create-report-close">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="export-options">
-                    <button class="export-btn" onclick="exportToPDF()">
-                        <i class="fas fa-file-pdf"></i>
-                        Export as PDF
-                    </button>
-                    <button class="export-btn secondary" onclick="exportToExcel()">
-                        <i class="fas fa-file-excel"></i>
-                        Export as Excel
-                    </button>
-                    <button class="export-btn secondary" onclick="shareReport()">
-                        <i class="fas fa-share"></i>
-                        Share Link
-                    </button>
+                <div class="report-creation-steps">
+                    <div class="step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Choose Template</h4>
+                            <p>Select a template for your report</p>
+                        </div>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Upload Data</h4>
+                            <p>Upload your data file</p>
+                        </div>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Configure</h4>
+                            <p>Customize your report</p>
+                        </div>
+                    </div>
+                    <div class="step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Generate</h4>
+                            <p>Create your report</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-content-area">
+                    <!-- Step 1: Template Selection -->
+                    <div class="step-panel active" id="step-1">
+                        <h4>Choose a Template</h4>
+                        <div class="templates-grid">
+                            <div class="template-card" data-template="business">
+                                <div class="template-preview">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                <h5>Business Report</h5>
+                                <p>Professional business analysis</p>
+                                <span class="template-badge free">Free</span>
+                            </div>
+                            <div class="template-card" data-template="financial">
+                                <div class="template-preview">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <h5>Financial Report</h5>
+                                <p>Financial data visualization</p>
+                                <span class="template-badge free">Free</span>
+                            </div>
+                            <div class="template-card" data-template="marketing">
+                                <div class="template-preview">
+                                    <i class="fas fa-bullhorn"></i>
+                                </div>
+                                <h5>Marketing Report</h5>
+                                <p>Marketing performance analysis</p>
+                                <span class="template-badge pro">Pro</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Data Upload -->
+                    <div class="step-panel" id="step-2">
+                        <h4>Upload Your Data</h4>
+                        <div class="upload-area" id="upload-area">
+                            <div class="upload-content">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h5>Drag & drop your file here</h5>
+                                <p>or <button class="btn btn-link" id="browse-files-btn">browse files</button></p>
+                                <p class="upload-formats">Supports: CSV, Excel, JSON</p>
+                            </div>
+                            <input type="file" id="data-file-input" accept=".csv,.xlsx,.xls,.json" style="display: none;">
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Configuration -->
+                    <div class="step-panel" id="step-3">
+                        <h4>Configure Your Report</h4>
+                        <div class="config-form">
+                            <div class="form-group">
+                                <label for="report-title">Report Title</label>
+                                <input type="text" id="report-title" placeholder="Enter report title">
+                            </div>
+                            <div class="form-group">
+                                <label for="report-description">Description</label>
+                                <textarea id="report-description" placeholder="Enter report description"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Chart Types</label>
+                                <div class="chart-options">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" value="bar" checked>
+                                        <span>Bar Chart</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" value="line">
+                                        <span>Line Chart</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" value="pie">
+                                        <span>Pie Chart</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Generate -->
+                    <div class="step-panel" id="step-4">
+                        <h4>Generate Report</h4>
+                        <div class="generate-preview">
+                            <div class="preview-content">
+                                <i class="fas fa-file-alt"></i>
+                                <h5>Ready to Generate</h5>
+                                <p>Your report will be created with the selected template and data.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="prev-step-btn" style="display: none;">Previous</button>
+                <button class="btn btn-primary" id="next-step-btn">Next</button>
+                <button class="btn btn-primary" id="generate-report-btn" style="display: none;">Generate Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plan Upgrade Modal -->
+    <div class="modal" id="upgrade-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Upgrade Your Plan</h3>
+                <button class="modal-close" id="upgrade-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="pricing-cards">
+                    <div class="pricing-card">
+                        <h4>Pro Plan</h4>
+                        <div class="price">$19<span>/month</span></div>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Unlimited Reports</li>
+                            <li><i class="fas fa-check"></i> All Templates</li>
+                            <li><i class="fas fa-check"></i> Priority Support</li>
+                            <li><i class="fas fa-check"></i> Custom Branding</li>
+                        </ul>
+                        <button class="btn btn-primary" id="upgrade-to-pro">Upgrade to Pro</button>
+                    </div>
+                    <div class="pricing-card popular">
+                        <h4>Business Plan</h4>
+                        <div class="price">$49<span>/month</span></div>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Everything in Pro</li>
+                            <li><i class="fas fa-check"></i> Team Collaboration</li>
+                            <li><i class="fas fa-check"></i> White-label Options</li>
+                            <li><i class="fas fa-check"></i> API Access</li>
+                        </ul>
+                        <button class="btn btn-primary" id="upgrade-to-business">Upgrade to Business</button>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div id="reports-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Your Reports</h2>
+                    <button class="btn btn-primary" onclick="createNewReport()">
+                        <i class="fas fa-plus"></i>
+                        Create New Report
+                    </button>
+                </div>
+                <div class="reports-list">
+                    <div class="report-item">
+                        <div class="report-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="report-info">
+                            <h3>Sales Report Q1 2024</h3>
+                            <p>Quarterly sales performance analysis</p>
+                            <div class="report-meta">
+                                <span class="report-date">Created: March 15, 2024</span>
+                                <span class="report-status completed">Completed</span>
+                            </div>
+                        </div>
+                        <div class="report-actions">
+                            <button class="btn btn-outline btn-sm" onclick="viewReport('1')">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="btn btn-outline btn-sm" onclick="downloadReport('1')">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                        </div>
+                    </div>
+                    <div class="report-item">
+                        <div class="report-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="report-info">
+                            <h3>Marketing Campaign Analysis</h3>
+                            <p>Digital marketing performance and ROI analysis</p>
+                            <div class="report-meta">
+                                <span class="report-date">Created: March 10, 2024</span>
+                                <span class="report-status completed">Completed</span>
+                            </div>
+                        </div>
+                        <div class="report-actions">
+                            <button class="btn btn-outline btn-sm" onclick="viewReport('2')">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="btn btn-outline btn-sm" onclick="downloadReport('2')">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Templates Section -->
+            <div id="templates-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Report Templates</h2>
+                    <div class="template-filters">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="free">Free</button>
+                        <button class="filter-btn" data-filter="pro">Pro</button>
+                    </div>
+                </div>
+                <div class="templates-grid">
+                    <div class="template-card" data-type="free">
+                        <div class="template-preview">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div class="template-info">
+                            <h3>Business Analysis Report</h3>
+                            <p>Professional business performance analysis with KPIs, charts, and insights.</p>
+                            <div class="template-footer">
+                                <span class="template-badge free">Free</span>
+                                <button class="btn btn-primary" onclick="useTemplate('business')">Use Template</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="template-card" data-type="free">
+                        <div class="template-preview">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="template-info">
+                            <h3>Financial Performance Report</h3>
+                            <p>Comprehensive financial analysis with revenue, expenses, and profit margins.</p>
+                            <div class="template-footer">
+                                <span class="template-badge free">Free</span>
+                                <button class="btn btn-primary" onclick="useTemplate('financial')">Use Template</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="template-card" data-type="pro">
+                        <div class="template-preview">
+                            <i class="fas fa-bullhorn"></i>
+                        </div>
+                        <div class="template-info">
+                            <h3>Marketing Campaign Report</h3>
+                            <p>Detailed marketing performance analysis with ROI, conversions, and engagement metrics.</p>
+                            <div class="template-footer">
+                                <span class="template-badge pro">Pro</span>
+                                <button class="btn btn-primary" onclick="useTemplate('marketing')">Use Template</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div id="analytics-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Analytics & Insights</h2>
+                    <div class="time-range">
+                        <button class="btn btn-outline btn-sm active" data-range="7d">7 Days</button>
+                        <button class="btn btn-outline btn-sm" data-range="30d">30 Days</button>
+                        <button class="btn btn-outline btn-sm" data-range="90d">90 Days</button>
+                    </div>
+                </div>
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <div class="card-header">
+                            <h3>Report Generation</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="usage-chart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="card-header">
+                            <h3>Template Usage</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="template-chart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="card-header">
+                            <h3>Performance Metrics</h3>
+                        </div>
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <div class="metric-value">2.3s</div>
+                                <div class="metric-label">Avg. Generation Time</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value">98.5%</div>
+                                <div class="metric-label">Success Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Menu Dropdown -->
+    <div class="user-dropdown" id="user-dropdown" style="display: none;">
+        <div class="dropdown-item" onclick="dashboardManager.showProfile()">
+            <i class="fas fa-user"></i> Profile
+        </div>
+        <div class="dropdown-item" onclick="dashboardManager.showSettings()">
+            <i class="fas fa-cog"></i> Settings
+        </div>
+        <div class="dropdown-item" onclick="dashboardManager.showBilling()">
+            <i class="fas fa-credit-card"></i> Billing
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="dashboardManager.switchAccount()">
+            <i class="fas fa-exchange-alt"></i> Switch Account
+        </div>
+        <div class="dropdown-item" onclick="dashboardManager.toggleDarkMode()">
+            <i class="fas fa-moon"></i> Dark Mode
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="dashboardManager.logout()">
+            <i class="fas fa-sign-out-alt"></i> Disconnect
         </div>
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/filepond@^4/dist/filepond.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/charts.js"></script>
-    <script src="js/dashboard.js"></script>
+    <script src="js/app.js?v=9"></script>
+    <script src="js/auth.js?v=9"></script>
+    <script src="js/dashboard.js?v=9"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Dashboard section navigation
+        function showDashboardSection() {
+            hideAllSections();
+            document.getElementById('dashboard-section').classList.add('active');
+            updateNavActive('dashboard');
+        }
+
+        function showReportsSection() {
+            hideAllSections();
+            document.getElementById('reports-section').classList.add('active');
+            updateNavActive('reports');
+        }
+
+        function showTemplatesSection() {
+            hideAllSections();
+            document.getElementById('templates-section').classList.add('active');
+            updateNavActive('templates');
+        }
+
+        function showAnalyticsSection() {
+            hideAllSections();
+            document.getElementById('analytics-section').classList.add('active');
+            updateNavActive('analytics');
+            initializeCharts();
+        }
+
+        function hideAllSections() {
+            document.querySelectorAll('.dashboard-section').forEach(section => {
+                section.classList.remove('active');
+            });
+        }
+
+        function updateNavActive(activeSection) {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            // Find the clicked button and make it active
+            const clickedButton = document.querySelector(`button[onclick*="${activeSection}"]`);
+            if (clickedButton) {
+                clickedButton.classList.add('active');
+            }
+        }
+
+        // Template and Report functions
+        function useTemplate(templateType) {
+            alert(`Using ${templateType} template - Feature coming soon!`);
+        }
+
+        function createNewReport() {
+            alert('Creating new report - Feature coming soon!');
+        }
+
+        function viewReport(reportId) {
+            alert(`Viewing report ${reportId} - Feature coming soon!`);
+        }
+
+        function downloadReport(reportId) {
+            alert(`Downloading report ${reportId} - Feature coming soon!`);
+        }
+
+        // Add event listeners for navigation buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navigation button event listeners
+            document.querySelectorAll('button[onclick*="showDashboardSection"]').forEach(btn => {
+                btn.addEventListener('click', showDashboardSection);
+            });
+            document.querySelectorAll('button[onclick*="showReportsSection"]').forEach(btn => {
+                btn.addEventListener('click', showReportsSection);
+            });
+            document.querySelectorAll('button[onclick*="showTemplatesSection"]').forEach(btn => {
+                btn.addEventListener('click', showTemplatesSection);
+            });
+            document.querySelectorAll('button[onclick*="showAnalyticsSection"]').forEach(btn => {
+                btn.addEventListener('click', showAnalyticsSection);
+            });
+        });
+
+        // Initialize charts for analytics
+        function initializeCharts() {
+            // Usage Chart
+            const usageCtx = document.getElementById('usage-chart');
+            if (usageCtx && !usageCtx.chart) {
+                usageCtx.chart = new Chart(usageCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Reports Generated',
+                            data: [3, 5, 2, 8, 4, 1, 6],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Template Usage Chart
+            const templateCtx = document.getElementById('template-chart');
+            if (templateCtx && !templateCtx.chart) {
+                templateCtx.chart = new Chart(templateCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Business', 'Financial', 'Marketing', 'Sales'],
+                        datasets: [{
+                            data: [35, 25, 20, 20],
+                            backgroundColor: [
+                                '#667eea',
+                                '#764ba2',
+                                '#f093fb',
+                                '#f5576c'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    </script>
 </body>
 </html>

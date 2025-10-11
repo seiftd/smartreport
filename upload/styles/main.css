@@ -299,10 +299,23 @@ a:hover {
 /* Hero Section */
 .hero {
     padding: var(--spacing-24) 0 var(--spacing-20);
-    background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
 }
 
 .hero-container {
@@ -317,6 +330,9 @@ a:hover {
 
 .hero-content {
     max-width: 600px;
+    position: relative;
+    z-index: 1;
+    color: white;
 }
 
 .hero-title {
@@ -324,6 +340,8 @@ a:hover {
     font-weight: 700;
     line-height: 1.1;
     margin-bottom: var(--spacing-6);
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .gradient-text {
@@ -335,7 +353,7 @@ a:hover {
 
 .hero-description {
     font-size: var(--font-size-xl);
-    color: var(--gray-600);
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: var(--spacing-8);
     line-height: 1.6;
 }

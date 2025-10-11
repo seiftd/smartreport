@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>SmartReport Pro - Transform Your Data into Professional Reports</title>
     <meta name="description" content="Transform Your Data into Professional Reports in Minutes. No-code SaaS platform for businesses to generate stunning reports from various data sources.">
     
     <!-- CSS -->
-    <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/components.css">
-    <link rel="stylesheet" href="styles/responsive.css">
+    <link rel="stylesheet" href="styles/main.css?v=6">
+    <link rel="stylesheet" href="styles/components.css?v=6">
+    <link rel="stylesheet" href="styles/responsive.css?v=6">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,8 +35,8 @@
                 <a href="#pricing" class="nav-link">Pricing</a>
                 <a href="#contact" class="nav-link">Contact</a>
                 <div class="nav-auth">
-                    <button class="btn btn-outline" id="login-btn">Login</button>
-                    <button class="btn btn-primary" id="signup-btn">Get Started</button>
+                    <button class="btn btn-outline" id="signin-btn">Sign In</button>
+                    <button class="btn btn-primary" id="get-started-btn">Get Started</button>
                 </div>
             </div>
             <div class="nav-toggle" id="nav-toggle">
@@ -59,7 +62,7 @@
                 </p>
                 <div class="hero-actions">
                     <button class="btn btn-primary btn-large" id="hero-signup">
-                        Start Free Trial
+                        Get Started
                         <i class="fas fa-arrow-right"></i>
                     </button>
                     <button class="btn btn-outline btn-large" id="demo-btn">
@@ -184,7 +187,7 @@
                         <li><i class="fas fa-check"></i> Brand removal</li>
                         <li><i class="fas fa-check"></i> Advanced analytics</li>
                     </ul>
-                    <button class="btn btn-primary btn-full">Start Free Trial</button>
+                    <button class="btn btn-primary btn-full">Get Started</button>
                 </div>
                 <div class="pricing-card">
                     <div class="pricing-header">
@@ -236,32 +239,32 @@
                 <div class="footer-links">
                     <div class="footer-column">
                         <h4>Product</h4>
-                        <a href="#">Features</a>
-                        <a href="#">Pricing</a>
-                        <a href="#">Templates</a>
-                        <a href="#">API</a>
+                        <a href="#features">Features</a>
+                        <a href="#pricing">Pricing</a>
+                        <a href="#templates">Templates</a>
+                        <a href="#api">API</a>
                     </div>
                     <div class="footer-column">
                         <h4>Company</h4>
-                        <a href="#">About</a>
-                        <a href="#">Blog</a>
-                        <a href="#">Careers</a>
-                        <a href="#">Contact</a>
+                        <a href="#about">About</a>
+                        <a href="#blog">Blog</a>
+                        <a href="#careers">Careers</a>
+                        <a href="#contact">Contact</a>
                     </div>
                     <div class="footer-column">
                         <h4>Support</h4>
-                        <a href="#">Help Center</a>
-                        <a href="#">Documentation</a>
-                        <a href="#">Status</a>
-                        <a href="#">Community</a>
+                        <a href="#help">Help Center</a>
+                        <a href="#docs">Documentation</a>
+                        <a href="#status">Status</a>
+                        <a href="#community">Community</a>
                     </div>
                 </div>
             </div>
             <div class="footer-bottom">
                 <p>&copy; 2024 SmartReport Pro. All rights reserved.</p>
                 <div class="footer-legal">
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
+                    <a href="#privacy">Privacy Policy</a>
+                    <a href="#terms">Terms of Service</a>
                 </div>
             </div>
         </div>
@@ -284,8 +287,14 @@
                     <input type="password" id="login-password" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">Login</button>
+                <div class="auth-divider">
+                    <span>or</span>
+                </div>
+                <button type="button" class="btn btn-google btn-full" id="google-login-btn">
+                    <i class="fab fa-google"></i> Continue with Google
+                </button>
                 <p class="auth-switch">
-                    Don't have an account? <a href="#" id="switch-to-signup">Sign up</a>
+                    Don't have an account? <a href="javascript:void(0)" id="switch-to-signup">Sign up</a>
                 </p>
             </form>
         </div>
@@ -315,20 +324,287 @@
                     <input type="text" id="signup-company">
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                <div class="auth-divider">
+                    <span>or</span>
+                </div>
+                <button type="button" class="btn btn-google btn-full" id="google-signup-btn">
+                    <i class="fab fa-google"></i> Continue with Google
+                </button>
                 <p class="auth-switch">
-                    Already have an account? <a href="#" id="switch-to-login">Login</a>
+                    Already have an account? <a href="javascript:void(0)" id="switch-to-login">Login</a>
                 </p>
             </form>
         </div>
     </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDkrrYJZc2cSSuwovTaCHvksSYnRVOOFgs",
+            authDomain: "smartreport-pro.firebaseapp.com",
+            projectId: "smartreport-pro",
+            storageBucket: "smartreport-pro.firebasestorage.app",
+            messagingSenderId: "990789201953",
+            appId: "1:990789201953:web:20b4c0b3a5610a4e61b360",
+            measurementId: "G-B5KLV37LEQ"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const analytics = firebase.analytics();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        // Configure Google provider
+        googleProvider.setCustomParameters({
+            prompt: 'select_account'
+        });
+
+        // Google Sign-in function using redirect (more reliable)
+        window.signInWithGoogle = async () => {
+            try {
+                console.log('🔥 Starting Google sign-in with redirect...');
+                console.log('🔥 Firebase auth object:', auth);
+                console.log('🔥 Google provider:', googleProvider);
+                
+                // Use redirect instead of popup to avoid conflicts
+                await auth.signInWithRedirect(googleProvider);
+                
+                // This will redirect the page, so we won't reach here
+                console.log('🔄 Redirecting to Google...');
+                
+            } catch (error) {
+                console.error('❌ Google sign-in failed:', error);
+                alert('Google sign-in failed: ' + error.message);
+            }
+        };
+
+          // Update landing page for logged-in users
+          window.updateLandingPageForLoggedInUser = (user) => {
+              // Update navigation
+              const navAuth = document.querySelector('.nav-auth');
+              if (navAuth) {
+                  navAuth.innerHTML = `
+                      <div class="user-menu" onclick="showUserMenu()">
+                          <div class="user-avatar">${(user.name || 'U').charAt(0).toUpperCase()}</div>
+                          <div class="user-info">
+                              <div class="user-name">${user.name || 'User'}</div>
+                              <div class="user-email">${user.email || 'user@example.com'}</div>
+                          </div>
+                      </div>
+                  `;
+              }
+              
+              // Update hero buttons
+              const heroButtons = document.querySelector('.hero-buttons');
+              if (heroButtons) {
+                  heroButtons.innerHTML = `
+                      <a href="dashboard.html" class="btn btn-primary btn-large">
+                          <i class="fas fa-rocket"></i>
+                          Get Started
+                      </a>
+                      <a href="dashboard.html" class="btn btn-outline btn-large">
+                          <i class="fas fa-plus"></i>
+                          Create Report
+                      </a>
+                  `;
+              }
+              
+              // Update hero title
+              const heroTitle = document.querySelector('.hero-title');
+              if (heroTitle) {
+                  heroTitle.innerHTML = `Welcome back, <span class="text-primary">${user.name || 'User'}</span>!<br>Ready to create more reports?`;
+              }
+          };
+
+          // Handle redirect result when page loads
+          window.handleGoogleRedirect = async () => {
+            try {
+                console.log('🔄 Checking for Google redirect result...');
+                const result = await auth.getRedirectResult();
+                
+                if (result.credential) {
+                    console.log('✅ Google redirect successful:', result.user);
+                    
+                    const user = result.user;
+                    const idToken = await user.getIdToken();
+                    
+                    // Store user data
+                    const userData = {
+                        uid: user.uid,
+                        email: user.email,
+                        name: user.displayName,
+                        photoURL: user.photoURL
+                    };
+                    
+                    localStorage.setItem('smartreport_user', JSON.stringify(userData));
+                    localStorage.setItem('smartreport_token', idToken);
+                    
+                    console.log('✅ User data stored, redirecting to dashboard...');
+                    
+                    // Redirect to dashboard immediately
+                    window.location.href = 'dashboard.html';
+                    return true;
+                } else {
+                    console.log('ℹ️ No Google redirect result found');
+                }
+            } catch (error) {
+                console.error('❌ Google redirect failed:', error);
+            }
+            return false;
+        };
+
+        // Check for redirect result when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🔥 DOM loaded, checking for Google redirect result...');
+            
+              // Check if user is already logged in
+              const existingUser = localStorage.getItem('smartreport_user');
+              if (existingUser) {
+                  console.log('✅ User already logged in, updating landing page for logged-in user');
+                  // Update the landing page to show logged-in state
+                  window.updateLandingPageForLoggedInUser(JSON.parse(existingUser));
+              }
+            
+            // Check if we're returning from Google redirect
+            const redirectResult = await window.handleGoogleRedirect();
+            if (redirectResult) {
+                console.log('✅ Google redirect successful, processing result...');
+                return;
+            }
+            
+            console.log('🔥 Setting up Google buttons...');
+            
+            // Get Started button
+            const getStartedBtn = document.getElementById('get-started-btn');
+            if (getStartedBtn) {
+                console.log('✅ Found Get Started button');
+                getStartedBtn.addEventListener('click', function(e) {
+                    console.log('🖱️ Get Started button clicked');
+                    e.preventDefault();
+                    // Show the signup modal
+                    document.getElementById('signup-modal').classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+            } else {
+                console.log('❌ Get Started button not found');
+            }
+            
+            // Sign In button
+            const signinBtn = document.getElementById('signin-btn');
+            if (signinBtn) {
+                console.log('✅ Found Sign In button');
+                signinBtn.addEventListener('click', function(e) {
+                    console.log('🖱️ Sign In button clicked');
+                    e.preventDefault();
+                    // Show the login modal
+                    document.getElementById('login-modal').classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+            } else {
+                console.log('❌ Sign In button not found');
+            }
+            
+            // Google buttons in modals
+            const googleLoginBtn = document.getElementById('google-login-btn');
+            const googleSignupBtn = document.getElementById('google-signup-btn');
+            
+            if (googleLoginBtn) {
+                console.log('✅ Found Google login button');
+                googleLoginBtn.addEventListener('click', function(e) {
+                    console.log('🖱️ Google login button clicked');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Prevent multiple clicks
+                    if (googleLoginBtn.disabled) return;
+                    googleLoginBtn.disabled = true;
+                    googleLoginBtn.textContent = 'Redirecting...';
+                    
+                    setTimeout(() => {
+                        window.signInWithGoogle();
+                    }, 100);
+                });
+            }
+            
+            if (googleSignupBtn) {
+                console.log('✅ Found Google signup button');
+                googleSignupBtn.addEventListener('click', function(e) {
+                    console.log('🖱️ Google signup button clicked');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Prevent multiple clicks
+                    if (googleSignupBtn.disabled) return;
+                    googleSignupBtn.disabled = true;
+                    googleSignupBtn.textContent = 'Redirecting...';
+                    
+                    setTimeout(() => {
+                        window.signInWithGoogle();
+                    }, 100);
+                });
+            }
+            
+            // Modal close handlers
+            const signupClose = document.getElementById('signup-close');
+            const loginClose = document.getElementById('login-close');
+            
+            if (signupClose) {
+                signupClose.addEventListener('click', function() {
+                    document.getElementById('signup-modal').classList.remove('active');
+                    document.body.style.overflow = '';
+                });
+            }
+            
+            if (loginClose) {
+                loginClose.addEventListener('click', function() {
+                    document.getElementById('login-modal').classList.remove('active');
+                    document.body.style.overflow = '';
+                });
+            }
+            
+            // Switch between login and signup
+            const switchToLogin = document.getElementById('switch-to-login');
+            const switchToSignup = document.getElementById('switch-to-signup');
+            
+            if (switchToLogin) {
+                switchToLogin.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.getElementById('signup-modal').classList.remove('active');
+                    document.getElementById('login-modal').classList.add('active');
+                });
+            }
+            
+            if (switchToSignup) {
+                switchToSignup.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.getElementById('login-modal').classList.remove('active');
+                    document.getElementById('signup-modal').classList.add('active');
+                });
+            }
+        });
+
+        // Make Firebase available globally
+        window.firebaseAuth = {
+            auth,
+            googleProvider,
+            signInWithPopup: auth.signInWithPopup.bind(auth),
+            signOut: auth.signOut.bind(auth)
+        };
+    </script>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/filepond@^4/dist/filepond.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/charts.js"></script>
+    <script src="js/app.js?v=6"></script>
+    <script src="js/auth.js?v=6"></script>
+    <script src="js/charts.js?v=3"></script>
 </body>
 </html>
