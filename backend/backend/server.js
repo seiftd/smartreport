@@ -16,12 +16,6 @@ const reportRoutes = require('./routes/reports');
 const templateRoutes = require('./routes/templates');
 const paymentRoutes = require('./routes/payments');
 const webhookRoutes = require('./routes/webhooks');
-const notificationRoutes = require('./routes/notifications');
-const subscriptionRoutes = require('./routes/subscriptions');
-const paymentRequestRoutes = require('./routes/payment-requests');
-const enterpriseContactRoutes = require('./routes/enterprise-contacts');
-const adminAuthRoutes = require('./routes/admin-auth');
-const adminDashboardRoutes = require('./routes/admin-dashboard');
 
 // Import middleware
 const { errorHandler } = require('./middleware/errorHandler');
@@ -52,8 +46,6 @@ app.use(cors({
     
     const allowedOrigins = [
       'http://localhost:3000',
-      'http://localhost:5173',
-      'http://localhost:5174',
       'http://localhost:8080',
       'https://smartreportpro.aizetecc.com',
       'https://www.smartreportpro.aizetecc.com',
@@ -127,12 +119,6 @@ app.use('/api/reports', authenticateToken, reportRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/payments', authenticateToken, paymentRoutes);
 app.use('/api/webhooks', webhookRoutes);
-app.use('/api/notifications', authenticateToken, notificationRoutes);
-app.use('/api/subscriptions', authenticateToken, subscriptionRoutes);
-app.use('/api/payment-requests', paymentRequestRoutes);
-app.use('/api/enterprise-contacts', enterpriseContactRoutes);
-app.use('/api/admin', adminAuthRoutes);
-app.use('/api/admin', adminDashboardRoutes);
 
 // Serve static files for production
 if (process.env.NODE_ENV === 'production') {

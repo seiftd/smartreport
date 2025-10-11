@@ -71,16 +71,6 @@ const User = sequelize.define('User', {
   subscriptionEndDate: {
     type: DataTypes.DATE,
     allowNull: true
-  },
-  isAdmin: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-    allowNull: false
-  },
-  role: {
-    type: DataTypes.ENUM('user', 'admin'),
-    defaultValue: 'user',
-    allowNull: false
   }
 }, {
   tableName: 'users',
