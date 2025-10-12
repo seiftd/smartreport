@@ -152,8 +152,32 @@ app.get('/test', (req, res) => {
   res.json({
     message: 'Backend is working!',
     database: process.env.DB_NAME ? 'Connected' : 'Not configured',
-    email: process.env.SMTP_USER ? 'Configured' : 'Disabled'
+    email: process.env.SMTP_USER ? 'Configured' : 'Disabled',
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
   });
+});
+
+// Database test endpoint
+app.get('/db-test', async (req, res) => {
+  try {
+    const { testConnection } = require('./config/database');
+    const isConnected = await testConnection();
+    
+    res.json({
+      database: isConnected ? 'Connected' : 'Failed',
+      dbName: process.env.DB_NAME,
+      dbHost: process.env.DB_HOST,
+      dbUser: process.env.DB_USER,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.json({
+      database: 'Error',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // API routes
