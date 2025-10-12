@@ -2,6 +2,12 @@ const nodemailer = require('nodemailer');
 
 // Create transporter
 const createTransporter = () => {
+  // Check if SMTP is configured
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log('SMTP not configured, email service disabled');
+    return null;
+  }
+  
   return nodemailer.createTransporter({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: process.env.SMTP_PORT || 587,
@@ -17,6 +23,11 @@ const createTransporter = () => {
 const sendEnterpriseContactEmail = async (email, content, budget) => {
   try {
     const transporter = createTransporter();
+    
+    if (!transporter) {
+      console.log('Email service disabled - SMTP not configured');
+      return { success: true, message: 'Email service disabled' };
+    }
 
     const mailOptions = {
       from: process.env.SMTP_USER,
@@ -59,6 +70,11 @@ const sendEnterpriseContactEmail = async (email, content, budget) => {
 const sendPaymentApprovalEmail = async (userEmail, plan) => {
   try {
     const transporter = createTransporter();
+    
+    if (!transporter) {
+      console.log('Email service disabled - SMTP not configured');
+      return { success: true, message: 'Email service disabled' };
+    }
 
     const mailOptions = {
       from: process.env.SMTP_USER,
@@ -107,6 +123,11 @@ const sendPaymentApprovalEmail = async (userEmail, plan) => {
 const sendPaymentRejectionEmail = async (userEmail, plan, reason) => {
   try {
     const transporter = createTransporter();
+    
+    if (!transporter) {
+      console.log('Email service disabled - SMTP not configured');
+      return { success: true, message: 'Email service disabled' };
+    }
 
     const mailOptions = {
       from: process.env.SMTP_USER,

@@ -111,12 +111,33 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Health check endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'SmartReport Pro API is running!',
+    status: 'success',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV,
+    version: '1.0.0'
+  });
+});
+
+// Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV
+  });
+});
+
+// Simple test endpoint
+app.get('/test', (req, res) => {
+  res.json({
+    message: 'Backend is working!',
+    database: process.env.DB_NAME ? 'Connected' : 'Not configured',
+    email: process.env.SMTP_USER ? 'Configured' : 'Disabled'
   });
 });
 
