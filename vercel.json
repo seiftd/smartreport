@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "smartreport-pro-api",
   "builds": [
     {
       "src": "backend/server.js",
@@ -9,16 +8,11 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "/(.*)",
       "dest": "backend/server.js"
     }
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "backend/server.js": {
-      "maxDuration": 30
-    }
   }
 }
