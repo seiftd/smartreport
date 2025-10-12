@@ -216,32 +216,27 @@ app.use(errorHandler);
 
 // Initialize database and start server
 const startServer = async () => {
-  try {
-    // Test database connection (non-blocking)
-    const dbConnected = await testConnection();
-    if (dbConnected) {
-      console.log('✅ Database connected successfully');
-      await syncDatabase();
-    } else {
-      console.log('⚠️ Database connection failed, running in limited mode');
-    }
-
-    // Start server regardless of database status
-    app.listen(PORT, () => {
-      console.log(`🚀 SmartReport Pro API Server running on port ${PORT}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV}`);
-      console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL}`);
-      console.log(`🗄️ Database: ${dbConnected ? 'Connected' : 'Limited mode'}`);
-    });
-  } catch (error) {
-    console.error('⚠️ Database setup failed, starting server in limited mode:', error.message);
+  console.log('🚀 Starting SmartReport Pro API Server...');
+  
+  // Start server immediately (database connection is optional)
+  app.listen(PORT, () => {
+    console.log(`🚀 SmartReport Pro API Server running on port ${PORT}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+    console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL}`);
+    console.log(`🗄️ Database: Testing connection...`);
     
-    // Start server even if database fails
-    app.listen(PORT, () => {
-      console.log(`🚀 SmartReport Pro API Server running on port ${PORT} (Limited mode)`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+    // Test database connection in background (non-blocking)
+    testConnection().then(dbConnected => {
+      if (dbConnected) {
+        console.log('✅ Database connected successfully');
+        syncDatabase().catch(err => console.log('⚠️ Database sync failed:', err.message));
+      } else {
+        console.log('⚠️ Database connection failed, running in limited mode');
+      }
+    }).catch(err => {
+      console.log('⚠️ Database test failed, running in limited mode:', err.message);
     });
-  }
+  });
 };
 
 startServer();
