@@ -9,6 +9,21 @@ require('dotenv').config();
 // Import database
 const { testConnection, syncDatabase } = require('./config/database');
 
+// Handle database connection gracefully
+const initializeDatabase = async () => {
+  try {
+    const isConnected = await testConnection();
+    if (isConnected) {
+      await syncDatabase();
+      console.log('✅ Database initialized successfully');
+    } else {
+      console.log('⚠️ Database connection failed, running in limited mode');
+    }
+  } catch (error) {
+    console.log('⚠️ Database initialization failed, running in limited mode:', error.message);
+  }
+};
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
@@ -178,26 +193,30 @@ app.use(errorHandler);
 // Initialize database and start server
 const startServer = async () => {
   try {
-    // Test database connection
+    // Test database connection (non-blocking)
     const dbConnected = await testConnection();
-    if (!dbConnected) {
-      console.error('❌ Database connection failed');
-      process.exit(1);
+    if (dbConnected) {
+      console.log('✅ Database connected successfully');
+      await syncDatabase();
+    } else {
+      console.log('⚠️ Database connection failed, running in limited mode');
     }
 
-    // Sync database (create tables)
-    await syncDatabase();
-
-    // Start server
+    // Start server regardless of database status
     app.listen(PORT, () => {
       console.log(`🚀 SmartReport Pro API Server running on port ${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV}`);
       console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL}`);
-      console.log(`🗄️ Database: Connected to Hostinger MySQL`);
+      console.log(`🗄️ Database: ${dbConnected ? 'Connected' : 'Limited mode'}`);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
+    console.error('⚠️ Database setup failed, starting server in limited mode:', error.message);
+    
+    // Start server even if database fails
+    app.listen(PORT, () => {
+      console.log(`🚀 SmartReport Pro API Server running on port ${PORT} (Limited mode)`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+    });
   }
 };
 
