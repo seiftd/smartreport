@@ -2,17 +2,16 @@
   "version": 2,
   "builds": [
     {
-      "src": "backend/test-server.js",
+      "src": "api/index.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "backend/test-server.js"
+      "dest": "api/index.js"
     }
   ],
-  "installCommand": "cd backend && npm install",
-  "buildCommand": "cd backend && echo 'Backend build completed'",
-  "outputDirectory": "backend"
+  "installCommand": "cd api && npm install",
+  "buildCommand": "cd api && echo 'API build completed'"
 }
